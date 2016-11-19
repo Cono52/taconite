@@ -22,7 +22,9 @@ $(deriveJSON defaultOptions ''User)
 type API = "users" :> Get '[JSON] [User]
 
 startApp :: IO ()
-startApp = run 8080 app
+startApp = do
+	run 8080 app
+	putStrLn "Running on port 8080..."
 
 app :: Application
 app = serve api server

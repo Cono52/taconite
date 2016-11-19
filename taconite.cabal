@@ -5,8 +5,8 @@ description:         Please see README.md
 homepage:            https://github.com/githubuser/taconite#readme
 license:             BSD3
 license-file:        LICENSE
-author:              Author name here
-maintainer:          example@example.com
+author:              Conor O'Flanagan
+maintainer:          oflanac52@gmail.com
 copyright:           2016 Author name here
 category:            Web
 build-type:          Simple
