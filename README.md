@@ -26,3 +26,9 @@ fully functional service. Each functionality below is demonstrated in a separate
 The main code is contained in a single file `lib.hs` in the `src` directory (A remote REST API is defined for package.haskell.org in a file RestClient.hs). The code is heavily commented from the point
 of view of a non-haskell programmer, but nonetheless a reasonably experienced programmer presumed to have prior
 experience with mainstream programming languages such as C++, Java or C-sharp.
+
+__Docker Compose__
+
+When you want to run a Docker service along with other services such as a Database, or when you want to run a set of services together, then use a docker-compose.yml file.
+
+I have added a docker-compose.yml file that includes a mongo db config. To run, ensure docker build in enabled in stack.yaml, do a stack build, a stack image container, and then start the system with 'docker-compose up'. The server will launch, as will a mongodb instance. you are now fully up and running.
