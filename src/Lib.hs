@@ -35,6 +35,7 @@ module Lib
 
 import           Control.Monad                (when)
 import           Control.Monad.IO.Class
+import           Control.Monad.Trans.Except   (ExceptT)
 import           Control.Monad.Trans.Resource
 import           Data.Aeson
 import           Data.Aeson.TH
@@ -42,15 +43,20 @@ import           Data.Bson.Generic
 import qualified Data.ByteString.Lazy         as L
 import qualified Data.List                    as DL
 import           Data.Maybe                   (catMaybes)
-import           Data.Text                    (pack)
+import           Data.Text                    (pack, unpack)
 import           Data.Time.Clock              (UTCTime, getCurrentTime)
 import           Data.Time.Format             (defaultTimeLocale, formatTime)
 import           Database.MongoDB
 import           GHC.Generics
+import           Network.HTTP.Client          (defaultManagerSettings,
+                                               newManager)
 import           Network.Wai
 import           Network.Wai.Handler.Warp
 import           Network.Wai.Logger
+import           RestClient
 import           Servant
+import qualified Servant.API                  as SC
+import qualified Servant.Client               as SC
 import           System.Environment           (getArgs, getProgName, lookupEnv)
 import           System.Log.Formatter
 import           System.Log.Handler           (setFormatter)
@@ -90,6 +96,7 @@ type API = "load_environment_variables" :> QueryParam "name" String :> Get '[JSO
       :<|> "getREADME"                  :> Get '[JSON] ResponseData
       :<|> "storeMessage"               :> ReqBody '[JSON] Message  :> Post '[JSON] Bool
       :<|> "searchMessage"              :> QueryParam "name" String :> Get '[JSON] [ResponseData]
+      :<|> "performRESTCall"            :> QueryParam "filter" String  :> Get '[JSON] ResponseData
 
 -- | Now that we have the Service API defined, we next move on to implementing the service. The startApp function is
 -- called to start the application (in fact there is a main function in the file ../app/Main.hs, which is the entry
@@ -142,6 +149,7 @@ server = loadEnvironmentVariable
     :<|> getREADME
     :<|> storeMessage
     :<|> searchMessage
+    :<|> performRESTCall
 
   where
     -- | where is just a way of ensuring that the following functions are scoped to the server function. Each function
@@ -272,6 +280,39 @@ server = loadEnvironmentVariable
       warnLog $ "No key for searching."
       return $ ([] :: [ResponseData])
 
+    -- | Performing a REST call
+    -- The following function performs a REST call to a remote service 'hackage.haskell.org'. This remote service is a
+    -- searchable documentation server. The API to the service is accessible at http://hackage.haskell.org
+    performRESTCall :: Maybe String -> Handler ResponseData
+    performRESTCall (Just filt) = liftIO $ do
+      warnLog $ "recieved request to perform REST call with param " ++ filt
+      doRest $ DL.filter (DL.isInfixOf filt)
+
+    -- | An implementation when no parameter is passed, no filtering so.
+    performRESTCall Nothing = liftIO $ do
+      warnLog $ "recieved request to perform REST call, but no param "
+      doRest id
+
+    -- | the performRESTCall is delegated to this function, with a filtering function passed as a parameter
+    doRest :: ([String] -> [String]) -> IO ResponseData
+    doRest flt = do
+      -- first we perform the call to hackage.org, then we will extract the package names and filter
+      -- to include only package names matching the 'filt' parameter, returning a comma separated string of those
+      -- packages.
+      res <- SC.runClientM getPackages =<< env   -- the actual REST call
+      case res of
+        Left err -> do
+          warnLog $ "Rest call failed with error: " ++ show err
+          return $ ResponseData $ "Rest call failed with error: " ++ show err
+        Right pkgs -> do
+          return $ ResponseData $ DL.intercalate ", " $                          -- reduce to comma separated string
+                                  flt $                                          -- run the filtering function
+                                  DL.map (unpack . RestClient.packageName) pkgs  -- extract name and convert to string
+      where env = do
+             manager <- newManager defaultManagerSettings
+             return (SC.ClientEnv manager (SC.BaseUrl SC.Http "hackage.haskell.org" 80 ""))
+
+
 -- What follows next is some helper function code that makes it easier to do warious things such as use
 -- a mongoDB, post console log statements define environment variables for use in your programmes and so forth.
 -- The code is not written particularly to be understood by novice Haskellers, but should be useable relatively easily
@@ -376,5 +417,7 @@ defEnv env fn def doWarn = lookupEnv env >>= \ e -> case e of
         when doWarn (doLog warningM $ "Environment variable: " ++ env ++
                                       " is not set. Defaulting to " ++ (show def))
         return def
+
+
 
 
