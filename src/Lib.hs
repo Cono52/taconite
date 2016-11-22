@@ -197,7 +197,7 @@ server = loadEnvironmentVariable
     getREADME, getREADME' :: Handler ResponseData -- fns with no input, second getREADME' is for demo below
     getREADME = liftIO $ do
       [rPath] <- getArgs         -- alternatively (rPath:xs) <- getArgs
-      s       <- readFile rPath  -- a more advanced way to write these three lines is:
+      s       <- readFile rPath
       return $ ResponseData s
 
     -- here is an alternative implementation of getREADME, more in keeping the Haskell style
@@ -205,7 +205,7 @@ server = loadEnvironmentVariable
     -- in english, read file idenfitied by the head of the argument list and return as a ResponseData structure
     getREADME' = liftIO $ ResponseData <$> (readFile . head =<< getArgs)
 
-    -- Hear, as a comparison or relative code complexity,
+    -- Here, as a comparison or relative code complexity,
     -- is an example of how to perform the equivalent of the
     -- Haskell readFile method in Java, but remember that this
     -- implementation would break for very large files. You will achieve nothing like the getREADME' implementation
