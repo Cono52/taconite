@@ -23,7 +23,7 @@ fully functional service. Each functionality below is demonstrated in a separate
 5. Database search/read.
 6. Call a REST service.
 
-The main code is contained in a single file `lib.hs` in the `src` directory (A remote REST API is defined for package.haskell.org in a file RestClient.hs). The code is heavily commented from the point
+The main code is contained in a single file `lib.hs` in the `src` directory (A remote REST API is defined for hackage.haskell.org in a file RestClient.hs). The code is heavily commented from the point
 of view of a non-haskell programmer, but nonetheless a reasonably experienced programmer presumed to have prior
 experience with mainstream programming languages such as C++, Java or C-sharp.
 
