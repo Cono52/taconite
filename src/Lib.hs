@@ -258,15 +258,26 @@ server = loadEnvironmentVariable
       -- follows:
       --            catMaybes :: [Maybe a] -> [a]
       --            catMaybes ls = [x | Just x <- ls]
-      --
+
       withMongoDbConnection $ do
         docs <- find (select ["name" =: key] "MESSAGE_RECORD") >>= drainCursor
         return $ catMaybes $ DL.map (\ b -> fromBSON b :: Maybe ResponseData) docs
+
       -- notice the structure of the first line of code: fn1 >>= fn2
       -- An alternative way to write this is:
       --        a <- fn1
       --        b <- fn2 a
       -- but for short IO function chains, it can be easier to use >>= to chain them.
+      --
+      -- In fact, the code above can be compressed further, although it is a question of style as to which is
+      -- preferable:
+      --
+      --     withMongoDbConnection $ find (select ["name" =: key] "MESSAGE_RECORD") >>= drainCursor >>=
+      --                                return . catMaybes . DL.map (\ b -> fromBSON b :: Maybe ResponseData)
+      --
+      -- The effect of the '.' is to chain a set of functions A . B . C into a single function X, so that when one calls
+      -- X p, C is called on the parameter p first, followed by B on the result, followed by A of the result of
+      -- that. This is exactly equivalent in effect to a function \p ->(A (B (C p))).
 
     -- This second version of searchMessage will only be called if the parameter passed has the Value 'Nothing'
     -- in other words, we are stripping away the case where we are passed nonsense from the primary implementation
