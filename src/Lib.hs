@@ -7,16 +7,18 @@ module Lib
 
 import           Data.Aeson
 import           Data.Aeson.TH
+import           Data.List                (sortBy)
+import           Data.Ord                 (comparing)
 import           Data.Time.Calendar
 import           Network.Wai
 import           Network.Wai.Handler.Warp
 import           Servant
 
 data User = User
-  { userId       :: Int
-  , userName     :: String
-  , email        :: String
-  , userReg      :: Day
+  { userId   :: Int
+  , userName :: String
+  , email    :: String
+  , userReg  :: Day
   } deriving (Eq, Show)
 
 $(deriveJSON defaultOptions ''User)
@@ -24,6 +26,7 @@ $(deriveJSON defaultOptions ''User)
 type UserAPI = "users" :> Get '[JSON] [User]
            :<|> "albert" :> Get '[JSON] User
            :<|> "isaac" :> Get '[JSON] User
+           :<|> "sortedById" :> Get '[JSON] [User]
 
 startApp :: IO ()
 startApp = do
@@ -40,10 +43,17 @@ server :: Server UserAPI
 server = return users
     :<|> return albert
     :<|> return isaac
+    :<|> return sortedById
+
+
+sortedById :: [User]
+sortedById = sortById users
+
+sortById :: [User] -> [User]
+sortById = sortBy (comparing userId)
 
 users :: [User]
 users = [isaac, albert]
-
 
 isaac :: User
 isaac = User 372 "Isaac Newton" "isaac@newton.co.uk" (fromGregorian 1683 3 1)
