@@ -1,6 +1,9 @@
-{-# LANGUAGE DataKinds       #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE TypeOperators   #-}
+{-# LANGUAGE DataKinds            #-}
+{-# LANGUAGE ExtendedDefaultRules #-}
+{-# LANGUAGE OverloadedStrings    #-}
+{-# LANGUAGE TemplateHaskell      #-}
+{-# LANGUAGE TypeOperators        #-}
+
 module Lib
     ( startApp
     ) where
@@ -13,6 +16,13 @@ import           Data.Time.Calendar
 import           Network.Wai
 import           Network.Wai.Handler.Warp
 import           Servant
+
+import           Control.Monad.Trans      (liftIO)
+import           Database.MongoDB         (Action, Document, Document, Value,
+                                           access, close, connect, delete,
+                                           exclude, find, host, insertMany,
+                                           master, project, rest, select, sort,
+                                           (=:))
 
 data User = User
   { userId   :: Int
@@ -60,3 +70,8 @@ isaac = User 372 "Isaac Newton" "isaac@newton.co.uk" (fromGregorian 1683 3 1)
 
 albert :: User
 albert = User 136 "Albert Einstein" "ae@mc2.org" (fromGregorian 1905 12 1)
+
+runMongo dbName functionToRun = do
+    pipe <- connect (host "127.0.0.1")
+    e <- access pipe master dbName functionToRun
+    close pipe
