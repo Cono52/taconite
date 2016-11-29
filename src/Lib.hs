@@ -79,9 +79,12 @@ runMongo functionToRun = do
 
 printdata =  runMongo allCollections
 
-firstFile = runMongo $ findOne $ select [] "posts"firstFile = runMongo $ findOne $ select [] "posts"
+firstFile = runMongo $ findOne $ select [] "posts"
 
 findAllFiles = runMongo $ find (select [] "posts") >>= rest
 
 insertFile :: Document -> IO()
 insertFile fileToPost = runMongo $ insert "posts" fileToPost
+
+deleteFile  :: Document -> IO()
+deleteFile doc = runMongo $ delete $ select doc "posts"
