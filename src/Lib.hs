@@ -19,8 +19,8 @@ import           Servant
 
 import           Control.Monad.Trans      (liftIO)
 import           Database.MongoDB         (Action, Document, Document, Value,
-                                           access, close, connect, delete,
-                                           exclude, find, host, insertMany,
+                                           access, allCollections, close, connect, delete,
+                                           exclude, find, findOne, host, insertMany,
                                            master, project, rest, select, sort,
                                            (=:))
 
@@ -40,8 +40,8 @@ type UserAPI = "users" :> Get '[JSON] [User]
 
 startApp :: IO ()
 startApp = do
-    putStrLn "Running on port 8080..."
-    run 8080 app
+    putStrLn "Running on port 8000..."
+    run 8000 app
 
 app :: Application
 app = serve api server
@@ -71,7 +71,12 @@ isaac = User 372 "Isaac Newton" "isaac@newton.co.uk" (fromGregorian 1683 3 1)
 albert :: User
 albert = User 136 "Albert Einstein" "ae@mc2.org" (fromGregorian 1905 12 1)
 
-runMongo dbName functionToRun = do
+runMongo functionToRun = do
     pipe <- connect (host "127.0.0.1")
-    e <- access pipe master dbName functionToRun
+    e <- access pipe master "test" functionToRun
+    print e 
     close pipe
+
+printdata =  runMongo allCollections
+
+firstFile = runMongo $ findOne $ select [] "posts"
