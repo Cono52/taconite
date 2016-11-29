@@ -79,4 +79,5 @@ runMongo functionToRun = do
 
 printdata =  runMongo allCollections
 
-firstFile = runMongo $ findOne $ select [] "posts"
+firstFile = runMongo $ findOne $ select [] "posts"firstFile = runMongo $ findOne $ select [] "posts"
+
