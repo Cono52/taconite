@@ -73,18 +73,18 @@ albert = User 136 "Albert Einstein" "ae@mc2.org" (fromGregorian 1905 12 1)
 
 runMongo functionToRun = do
     pipe <- connect (host "127.0.0.1")
-    e <- access pipe master "test" functionToRun
+    e <- access pipe master "filebase" functionToRun
     print e 
     close pipe
 
 printdata =  runMongo allCollections
 
-firstFile = runMongo $ findOne $ select [] "posts"
+firstFile = runMongo $ findOne $ select [] "files"
 
-findAllFiles = runMongo $ find (select [] "posts") >>= rest
+findAllFiles = runMongo $ find (select [] "files") >>= rest
 
 insertFile :: Document -> IO()
-insertFile fileToPost = runMongo $ insert "posts" fileToPost
+insertFile fileToPost = runMongo $ insert "files" fileToPost
 
 deleteFile  :: Document -> IO()
-deleteFile doc = runMongo $ delete $ select doc "posts"
+deleteFile doc = runMongo $ delete $ select doc "files"
