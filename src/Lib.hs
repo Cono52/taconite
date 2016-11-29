@@ -18,9 +18,9 @@ import           Network.Wai.Handler.Warp
 import           Servant
 
 import           Control.Monad.Trans      (liftIO)
-import           Database.MongoDB         (Action, Document, Document, Value,
+import           Database.MongoDB         (Action, Document, Value,
                                            access, allCollections, close, connect, delete,
-                                           exclude, find, findOne, host, insertMany,
+                                           exclude, find, insert, findOne, host, insertMany,
                                            master, project, rest, select, sort,
                                            (=:))
 
