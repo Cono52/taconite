@@ -83,3 +83,5 @@ firstFile = runMongo $ findOne $ select [] "posts"firstFile = runMongo $ findOne
 
 findAllFiles = runMongo $ find (select [] "posts") >>= rest
 
+insertFile :: Document -> IO()
+insertFile fileToPost = runMongo $ insert "posts" fileToPost
