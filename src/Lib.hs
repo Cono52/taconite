@@ -81,3 +81,5 @@ printdata =  runMongo allCollections
 
 firstFile = runMongo $ findOne $ select [] "posts"firstFile = runMongo $ findOne $ select [] "posts"
 
+findAllFiles = runMongo $ find (select [] "posts") >>= rest
+
