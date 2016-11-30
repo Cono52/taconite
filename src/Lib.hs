@@ -53,6 +53,7 @@ type UserAPI = "users" :> Get '[JSON] [User]
            :<|> "albert" :> Get '[JSON] User
            :<|> "isaac" :> Get '[JSON] User
            :<|> "sortedById" :> Get '[JSON] [User]
+           :<|> "saveFile" :> ReqBody '[JSON] UserFile :> Post '[JSON] ResponseData
 
 startApp :: IO ()
 startApp = do
@@ -70,6 +71,7 @@ server = return users
     :<|> return albert
     :<|> return isaac
     :<|> return sortedById
+    :<|> saveFile
 
 
 sortedById :: [User]
@@ -104,3 +106,6 @@ insertFile fileToPost = runMongo $ insert "files" fileToPost
 
 deleteFile :: Document -> IO()
 deleteFile doc = runMongo $ delete $ select doc "files"
+
+saveFile :: UserFile -> Handler ResponseData
+saveFile userfile = return (ResponseData ( file userfile ))
