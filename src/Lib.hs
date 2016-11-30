@@ -3,6 +3,7 @@
 {-# LANGUAGE OverloadedStrings    #-}
 {-# LANGUAGE TemplateHaskell      #-}
 {-# LANGUAGE TypeOperators        #-}
+{-# LANGUAGE DeriveGeneric        #-}
 
 module Lib
     ( startApp
@@ -16,7 +17,8 @@ import           Data.Time.Calendar
 import           Network.Wai
 import           Network.Wai.Handler.Warp
 import           Servant
-
+import           Data.Attoparsec.ByteString
+import           GHC.Generics
 import           Control.Monad.Trans      (liftIO)
 import           Database.MongoDB         (Action, Document, Value,
                                            access, allCollections, close, connect, delete,
@@ -30,6 +32,20 @@ data User = User
   , email    :: String
   , userReg  :: Day
   } deriving (Eq, Show)
+
+data UserFile = UserFile 
+  { file :: String
+  } deriving Generic
+
+instance FromJSON UserFile
+instance ToJSON UserFile
+
+data ResponseData = ResponseData
+  { response :: String
+  } deriving Generic
+
+instance ToJSON ResponseData
+instance FromJSON ResponseData
 
 $(deriveJSON defaultOptions ''User)
 
@@ -86,5 +102,5 @@ findAllFiles = runMongo $ find (select [] "files") >>= rest
 insertFile :: Document -> IO()
 insertFile fileToPost = runMongo $ insert "files" fileToPost
 
-deleteFile  :: Document -> IO()
+deleteFile :: Document -> IO()
 deleteFile doc = runMongo $ delete $ select doc "files"
