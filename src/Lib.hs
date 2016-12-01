@@ -41,10 +41,10 @@ data User = User
 
 data UserFile = UserFile 
   { file :: String
-  } deriving Generic
+  } deriving (Show, Generic, FromJSON, ToJSON, ToBSON, FromBSON)
 
-instance FromJSON UserFile
-instance ToJSON UserFile
+deriving instance FromBSON String
+deriving instance ToBSON   String
 
 data ResponseData = ResponseData
   { response :: String
