@@ -23,6 +23,7 @@ library
                      , attoparsec
                      , mtl
                      , mongoDB
+                     , bson-generic
                      , monad-control
                      , lifted-base
                      , time

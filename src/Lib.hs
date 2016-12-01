@@ -1,9 +1,14 @@
 {-# LANGUAGE DataKinds            #-}
 {-# LANGUAGE ExtendedDefaultRules #-}
 {-# LANGUAGE OverloadedStrings    #-}
+{-# LANGUAGE StandaloneDeriving   #-}
 {-# LANGUAGE TemplateHaskell      #-}
 {-# LANGUAGE TypeOperators        #-}
 {-# LANGUAGE DeriveGeneric        #-}
+{-# LANGUAGE DeriveAnyClass       #-}
+{-# LANGUAGE FlexibleInstances    #-}
+{-# LANGUAGE TypeSynonymInstances #-}
+
 
 module Lib
     ( startApp
@@ -18,6 +23,7 @@ import           Network.Wai
 import           Network.Wai.Handler.Warp
 import           Servant
 import           Data.Attoparsec.ByteString
+import           Data.Bson.Generic
 import           GHC.Generics
 import           Control.Monad.Trans      (liftIO)
 import           Database.MongoDB         (Action, Document, Value,
