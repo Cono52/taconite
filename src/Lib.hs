@@ -114,4 +114,8 @@ deleteFile :: Document -> IO()
 deleteFile doc = runMongo $ delete $ select doc "files"
 
 saveFile :: UserFile -> Handler ResponseData
-saveFile userfile = return (ResponseData ( file userfile ))
+saveFile userfile = do
+    e <- insertFile $ ( toBSON $ file userfile )
+    return $ ResponseData (file userfile) --make response data the same string from the file
+
+-- saveFile userfile = return (ResponseData ( file userfile ))
