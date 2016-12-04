@@ -32,13 +32,6 @@ import           Database.MongoDB         (Action, Document, Value,
                                            master, project, rest, select, sort,
                                            (=:))
 
-data User = User
-  { userId   :: Int
-  , userName :: String
-  , email    :: String
-  , userReg  :: Day
-  } deriving (Eq, Show)
-
 data UserFile = UserFile 
   { file :: String
   } deriving (Show, Generic, FromJSON, ToJSON, ToBSON, FromBSON)
@@ -55,11 +48,7 @@ instance FromJSON ResponseData
 
 $(deriveJSON defaultOptions ''User)
 
-type UserAPI = "users" :> Get '[JSON] [User]
-           :<|> "albert" :> Get '[JSON] User
-           :<|> "isaac" :> Get '[JSON] User
-           :<|> "sortedById" :> Get '[JSON] [User]
-           :<|> "saveFile" :> ReqBody '[JSON] UserFile :> Post '[JSON] ResponseData
+type UserAPI = "saveFile" :> ReqBody '[JSON] UserFile :> Post '[JSON] ResponseData
 
 startApp :: IO ()
 startApp = do
@@ -73,27 +62,8 @@ api :: Proxy UserAPI
 api = Proxy
 
 server :: Server UserAPI
-server = return users
-    :<|> return albert
-    :<|> return isaac
-    :<|> return sortedById
-    :<|> saveFile
+server = saveFile
 
-
-sortedById :: [User]
-sortedById = sortById users
-
-sortById :: [User] -> [User]
-sortById = sortBy (comparing userId)
-
-users :: [User]
-users = [isaac, albert]
-
-isaac :: User
-isaac = User 372 "Isaac Newton" "isaac@newton.co.uk" (fromGregorian 1683 3 1)
-
-albert :: User
-albert = User 136 "Albert Einstein" "ae@mc2.org" (fromGregorian 1905 12 1)
 
 runMongo functionToRun = do
     pipe <- connect (host "127.0.0.1")
