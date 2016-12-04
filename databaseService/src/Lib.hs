@@ -20,6 +20,7 @@ import           Data.List                (sortBy)
 import           Data.Ord                 (comparing)
 import           Data.Time.Calendar
 import           Network.Wai
+import qualified Data.List                    as DL
 import           Network.Wai.Handler.Warp
 import           Servant
 import           Data.Attoparsec.ByteString
@@ -31,6 +32,12 @@ import           Database.MongoDB         (Action, Document, Value,
                                            exclude, find, insert, findOne, host, insertMany,
                                            master, project, rest, select, sort,
                                            (=:))
+
+data User = User
+  { username :: String
+  , password :: String
+  } deriving (Show, Generic, FromJSON, ToJSON, ToBSON, FromBSON)
+
 
 data UserFile = UserFile 
   { file :: String
@@ -46,7 +53,6 @@ data ResponseData = ResponseData
 instance ToJSON ResponseData
 instance FromJSON ResponseData
 
-$(deriveJSON defaultOptions ''User)
 
 type UserAPI = "saveFile" :> ReqBody '[JSON] UserFile :> Post '[JSON] ResponseData
 
@@ -71,6 +77,13 @@ runMongo functionToRun = do
     print e 
     close pipe
 
+returnMongo :: Action IO a0 -> IO a0
+returnMongo functionToRun = do
+    pipe <- connect (host "127.0.0.1")
+    e <- access pipe master "filebase" functionToRun
+    close pipe
+    return e
+
 printdata =  runMongo allCollections
 
 firstFile = runMongo $ findOne $ select [] "files"
@@ -87,4 +100,10 @@ saveFile :: UserFile -> Handler ResponseData
 saveFile userfile = liftIO $ do
     e <- insertFile $ ( toBSON $ userfile )
     return $ ResponseData (file userfile) --make response data the same string from the file
+
+
+--users :: User
+--users = liftIO $ do 
+ -- docs <- returnMongo $ find (select [] "users") >>= rest
+  --return $ catMaybes $ DL.map (\ b -> fromBSON b :: Maybe User) docs
 
