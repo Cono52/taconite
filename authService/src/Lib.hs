@@ -74,3 +74,20 @@ isaac = User 372 "Isaac Newton" "isaac@newton.co.uk" (fromGregorian 1683 3 1)
 
 albert :: User
 albert = User 136 "Albert Einstein" "ae@mc2.org" (fromGregorian 1905 12 1)
+
+modulto = 256
+testPub = PublicKey(123)
+testPri = PrivateKey(133)
+
+generateKeys :: IO Int
+generateKeys = randomRIO(1, modulto - 1) --traped in IO 
+
+encrypt :: String -> PublicKey -> String
+encrypt str p =  map (\a -> chr $ ((ord a) + (pubkey p)) `mod` modulto) str
+
+decrypt :: String -> PrivateKey -> String
+decrypt str p =  map (\a -> chr $ ((ord a) + (prikey p)) `mod` modulto) str
+
+
+
+
