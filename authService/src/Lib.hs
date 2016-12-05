@@ -18,19 +18,22 @@ import           Data.Aeson
 import           Data.Aeson.TH
 import           Data.List                (sortBy)
 import           Data.Ord                 (comparing)
+import           Data.String
+import           Data.Char
 import           Data.Time.Calendar
+import qualified Data.ByteString.Char8 as C
+import           System.Random
 import           Network.Wai
 import           Network.Wai.Handler.Warp
 import           Servant
-import           Data.Attoparsec.ByteString
-import           Data.Bson.Generic
 import           GHC.Generics
 import           Control.Monad.Trans      (liftIO)
-import           Database.MongoDB         (Action, Document, Value,
-                                           access, allCollections, close, connect, delete,
-                                           exclude, find, insert, findOne, host, insertMany,
-                                           master, project, rest, select, sort,
-                                           (=:))
+
+
+
+data PublicKey = PublicKey { pubkey :: Int }
+data PrivateKey = PrivateKey { prikey :: Int }
+
 
 data User = User
   { userId   :: Int
