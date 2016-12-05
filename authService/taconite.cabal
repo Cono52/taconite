@@ -22,8 +22,9 @@ library
                      , wai
                      , attoparsec
                      , mtl
-                     , mongoDB
-                     , bson-generic
+                     , random
+                     , binary
+                     , bytestring
                      , monad-control
                      , lifted-base
                      , time
