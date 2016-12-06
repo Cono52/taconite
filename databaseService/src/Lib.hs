@@ -19,19 +19,17 @@ import           Data.Aeson.TH
 import           Data.List                (sortBy)
 import           Data.Ord                 (comparing)
 import           Data.Time.Calendar
-import           Network.Wai
 import qualified Data.List                    as DL
-import           Network.Wai.Handler.Warp
-import           Servant
+import           Data.Maybe                   (catMaybes)
 import           Data.Attoparsec.ByteString
 import           Data.Bson.Generic
+
+import           Network.Wai
+import           Network.Wai.Handler.Warp
+import           Servant
 import           GHC.Generics
 import           Control.Monad.Trans      (liftIO)
-import           Database.MongoDB         (Action, Document, Value,
-                                           access, allCollections, close, connect, delete,
-                                           exclude, find, insert, findOne, host, insertMany,
-                                           master, project, rest, select, sort,
-                                           (=:))
+import           Database.MongoDB         
 
 data User = User
   { username :: String
@@ -54,7 +52,8 @@ instance ToJSON ResponseData
 instance FromJSON ResponseData
 
 
-type UserAPI = "saveFile" :> ReqBody '[JSON] UserFile :> Post '[JSON] ResponseData
+type UserAPI = "users" :> QueryParam "search" String :> Get '[JSON] [User]
+          :<|> "saveFile" :> ReqBody '[JSON] UserFile :> Post '[JSON] ResponseData
 
 startApp :: IO ()
 startApp = do
@@ -68,7 +67,8 @@ api :: Proxy UserAPI
 api = Proxy
 
 server :: Server UserAPI
-server = saveFile
+server = users
+    :<|> saveFile
 
 
 runMongo functionToRun = do
@@ -102,8 +102,7 @@ saveFile userfile = liftIO $ do
     return $ ResponseData (file userfile) --make response data the same string from the file
 
 
---users :: User
---users = liftIO $ do 
- -- docs <- returnMongo $ find (select [] "users") >>= rest
-  --return $ catMaybes $ DL.map (\ b -> fromBSON b :: Maybe User) docs
-
+users :: Maybe String -> Handler [User]
+users _ = liftIO $ do 
+    docs <- returnMongo $ find (select [] "users") >>= rest
+    return $ catMaybes (map (\ b ->  fromBSON b :: Maybe User) docs)
