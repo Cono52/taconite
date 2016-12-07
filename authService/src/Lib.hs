@@ -15,6 +15,7 @@ module Lib
     ) where
 
 import           Data.Aeson
+import           Data.Proxy
 import           Data.Aeson.TH
 import           Data.List                (sortBy)
 import           Data.Ord                 (comparing)
@@ -25,7 +26,10 @@ import qualified Data.ByteString.Char8 as C
 import           System.Random
 import           Network.Wai
 import           Network.Wai.Handler.Warp
+import           Network.HTTP.Client (newManager, defaultManagerSettings)
 import           Servant
+import           Servant.Client
+import           Servant.API
 import           GHC.Generics
 import           Control.Monad.Trans      (liftIO)
 
@@ -35,45 +39,26 @@ data PublicKey = PublicKey { pubkey :: Int }
 data PrivateKey = PrivateKey { prikey :: Int }
 
 
-data User = User
-  { userId   :: Int
-  , userName :: String
-  , email    :: String
-  , userReg  :: Day
-  } deriving (Eq, Show)
-
-$(deriveJSON defaultOptions ''User)
-
-type UserAPI = "users" :> Get '[JSON] [User]
-           :<|> "albert" :> Get '[JSON] User
-           :<|> "isaac" :> Get '[JSON] User
+--type UserAPI = "users" :> Get '[JSON] [User]
+--           :<|> "albert" :> Get '[JSON] User
+--           :<|> "isaac" :> Get '[JSON] User
 
 
-startApp :: IO ()
-startApp = do
-    putStrLn "Running on port 8001..."
-    run 8001 app
+--startApp :: IO ()
+--startApp = do
+--   putStrLn "Running on port 8001..."
+--    run 8001 app
 
-app :: Application
-app = serve api server
+--app :: Application
+--app = serve api server
 
-api :: Proxy UserAPI
-api = Proxy
+--api :: Proxy UserAPI
+--api = Proxy
 
-server :: Server UserAPI
-server = return users
-    :<|> return albert
-    :<|> return isaac
-
-
-users :: [User]
-users = [isaac, albert]
-
-isaac :: User
-isaac = User 372 "Isaac Newton" "isaac@newton.co.uk" (fromGregorian 1683 3 1)
-
-albert :: User
-albert = User 136 "Albert Einstein" "ae@mc2.org" (fromGregorian 1905 12 1)
+--server :: Server UserAPI
+--server = return users
+ --   :<|> return albert
+ --   :<|> return isaac
 
 modulto = 256
 testPub = PublicKey(123)
@@ -89,5 +74,48 @@ decrypt :: String -> PrivateKey -> String
 decrypt str p =  map (\a -> chr $ ((ord a) + (prikey p)) `mod` modulto) str
 
 
+data User = User
+  { username :: String
+  , password :: String
+  } deriving (Show, Generic, FromJSON, ToJSON)
 
 
+data UserFile = UserFile 
+  { file :: String
+  } deriving (Show, Generic, FromJSON, ToJSON)
+
+data ResponseData = ResponseData
+  { response :: String
+  } deriving Generic
+
+instance ToJSON ResponseData
+instance FromJSON ResponseData
+
+
+users :: Maybe String -> ClientM [User]
+
+saveFile :: UserFile -> ClientM ResponseData
+
+type DataAPI = "users" :> QueryParam "search" String :> Get '[JSON] [User]
+          :<|> "saveFile" :> ReqBody '[JSON] UserFile :> Post '[JSON] ResponseData
+
+dataAPI :: Proxy DataAPI
+dataAPI = Proxy
+
+
+(users :<|> saveFile) = client dataAPI
+
+
+queries :: ClientM [User]
+queries = do
+  u <- users (Just "")
+  return u
+
+startApp :: IO ()
+startApp = do
+  manager <- newManager defaultManagerSettings
+  res <- runClientM queries (ClientEnv manager (BaseUrl Http "127.0.0.1" 8000 ""))
+  case res of
+    Left err -> putStrLn $ "Error: " ++ show err
+    Right (users) -> do
+      print users
