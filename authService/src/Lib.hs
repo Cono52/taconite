@@ -35,30 +35,37 @@ import           Control.Monad.Trans      (liftIO)
 
 
 
+
+--Auth API
+
+data Token = Token 
+  {
+    token :: Int
+  } deriving (Show, Generic, FromJSON, ToJSON) 
+
+
+startApp :: IO ()
+startApp = do
+    putStrLn "Running on port 8001..."
+    run 8001 app
+
+app :: Application
+app = serve api server
+
+type API = "getToken" :> QueryParam "username" String :> Get '[JSON] Token
+
+api :: Proxy API
+api = Proxy
+
+server :: Server API
+server = getToken
+
+getToken :: Maybe String -> Handler Token
+getToken uname = return $ Token(10)
+
+--encryption code
 data PublicKey = PublicKey { pubkey :: Int }
 data PrivateKey = PrivateKey { prikey :: Int }
-
-
---type UserAPI = "users" :> Get '[JSON] [User]
---           :<|> "albert" :> Get '[JSON] User
---           :<|> "isaac" :> Get '[JSON] User
-
-
---startApp :: IO ()
---startApp = do
---   putStrLn "Running on port 8001..."
---    run 8001 app
-
---app :: Application
---app = serve api server
-
---api :: Proxy UserAPI
---api = Proxy
-
---server :: Server UserAPI
---server = return users
- --   :<|> return albert
- --   :<|> return isaac
 
 modulto = 256
 testPub = PublicKey(123)
@@ -73,7 +80,7 @@ encrypt str p =  map (\a -> chr $ ((ord a) + (pubkey p)) `mod` modulto) str
 decrypt :: String -> PrivateKey -> String
 decrypt str p =  map (\a -> chr $ ((ord a) + (prikey p)) `mod` modulto) str
 
-
+-- All the stuff used to interact with the DB from here on
 data User = User
   { username :: String
   , password :: String
@@ -111,8 +118,8 @@ queries = do
   u <- users (Just "")
   return u
 
-startApp :: IO ()
-startApp = do
+getUsers :: IO ()
+getUsers = do
   manager <- newManager defaultManagerSettings
   res <- runClientM queries (ClientEnv manager (BaseUrl Http "127.0.0.1" 8000 ""))
   case res of
