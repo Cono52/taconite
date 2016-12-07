@@ -39,8 +39,7 @@ import           Control.Monad.Trans      (liftIO)
 --Auth API
 
 data Token = Token 
-  {
-    token :: Int
+  { token :: Int
   } deriving (Show, Generic, FromJSON, ToJSON) 
 
 
@@ -52,20 +51,25 @@ startApp = do
 app :: Application
 app = serve api server
 
-type API = "getToken" :> QueryParam "username" String :> Get '[JSON] Token
+type API = "login" :> QueryParam "username" String :> Get '[JSON] Token
+      :<|> "getPublicKey" :> Get '[JSON] PublicKey
 
 api :: Proxy API
 api = Proxy
 
 server :: Server API
-server = getToken
+server = login
+    :<|> return getPublicKey
 
-getToken :: Maybe String -> Handler Token
-getToken uname = return $ Token(10)
+login :: Maybe String -> Handler Token
+login uname = liftIO $ do
+  e <- getUsers
+  print e
+  return $ Token(10)
 
 --encryption code
-data PublicKey = PublicKey { pubkey :: Int }
-data PrivateKey = PrivateKey { prikey :: Int }
+data PublicKey = PublicKey { pubkey :: Int } deriving (Show, Generic, FromJSON, ToJSON)
+data PrivateKey = PrivateKey { prikey :: Int } deriving (Show, Generic, FromJSON, ToJSON)
 
 modulto = 256
 testPub = PublicKey(123)
@@ -79,6 +83,9 @@ encrypt str p =  map (\a -> chr $ ((ord a) + (pubkey p)) `mod` modulto) str
 
 decrypt :: String -> PrivateKey -> String
 decrypt str p =  map (\a -> chr $ ((ord a) + (prikey p)) `mod` modulto) str
+
+getPublicKey :: PublicKey
+getPublicKey = testPub
 
 -- All the stuff used to interact with the DB from here on
 data User = User
