@@ -16,20 +16,20 @@ module Lib
 
 import           Data.Aeson
 import           Data.Aeson.TH
-import           Data.List                (sortBy)
-import           Data.Ord                 (comparing)
-import           Data.Time.Calendar
-import qualified Data.List                    as DL
-import           Data.Maybe                   (catMaybes)
 import           Data.Attoparsec.ByteString
 import           Data.Bson.Generic
+import           Data.List                  (sortBy)
+import qualified Data.List                  as DL
+import           Data.Maybe                 (mapMaybe)
+import           Data.Ord                   (comparing)
+import           Data.Time.Calendar
 
+import           Control.Monad.Trans        (liftIO)
+import           Database.MongoDB
+import           GHC.Generics
 import           Network.Wai
 import           Network.Wai.Handler.Warp
 import           Servant
-import           GHC.Generics
-import           Control.Monad.Trans      (liftIO)
-import           Database.MongoDB         
 
 data User = User
   { username :: String
@@ -37,7 +37,7 @@ data User = User
   } deriving (Show, Generic, FromJSON, ToJSON, ToBSON, FromBSON)
 
 
-data UserFile = UserFile 
+data UserFile = UserFile
   { file :: String
   } deriving (Show, Generic, FromJSON, ToJSON, ToBSON, FromBSON)
 
@@ -52,7 +52,7 @@ instance ToJSON ResponseData
 instance FromJSON ResponseData
 
 
-type UserAPI = "users" :> QueryParam "search" String :> Get '[JSON] [User]
+type UserAPI = "getUserByName" :> QueryParam "search" String :> Get '[JSON] [User]
           :<|> "saveFile" :> ReqBody '[JSON] UserFile :> Post '[JSON] ResponseData
 
 startApp :: IO ()
@@ -67,14 +67,14 @@ api :: Proxy UserAPI
 api = Proxy
 
 server :: Server UserAPI
-server = users
+server = getUserByName
     :<|> saveFile
 
 
 runMongo functionToRun = do
     pipe <- connect (host "127.0.0.1")
     e <- access pipe master "filebase" functionToRun
-    print e 
+    print e
     close pipe
 
 returnMongo :: Action IO a0 -> IO a0
@@ -98,11 +98,12 @@ deleteFile doc = runMongo $ delete $ select doc "files"
 
 saveFile :: UserFile -> Handler ResponseData
 saveFile userfile = liftIO $ do
-    e <- insertFile $ ( toBSON $ userfile )
+    e <- insertFile ( toBSON userfile )
     return $ ResponseData (file userfile) --make response data the same string from the file
 
 
-users :: Maybe String -> Handler [User]
-users _ = liftIO $ do 
-    docs <- returnMongo $ find (select [] "users") >>= rest
-    return $ catMaybes (map (\ b ->  fromBSON b :: Maybe User) docs)
+getUserByName :: Maybe String -> Handler [User]
+getUserByName uname = liftIO $ do
+    print "hit"
+    docs <- returnMongo $ find (select ["username" =: uname] "users") >>= rest
+    return $ mapMaybe (\ b ->  fromBSON b :: Maybe User) docs
