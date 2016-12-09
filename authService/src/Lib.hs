@@ -64,7 +64,7 @@ server = login
 
 login :: Maybe String -> Handler Token
 login uname = liftIO $ do
-  u <- getUsers
+  u <- getUsers uname
   return $ Token 10
 
 --encryption code
@@ -118,10 +118,10 @@ dataAPI = Proxy
 
 (getUserByName :<|> saveFile) = client dataAPI
 
-getUsers :: IO ()
-getUsers = do
+getUsers :: Maybe String -> Either String [User]
+getUsers name = do
   manager <- newManager defaultManagerSettings
-  res <- runClientM (getUserByName (Just "conor")) (ClientEnv manager (BaseUrl Http "127.0.0.1" 8000 ""))
+  res <- runClientM (getUserByName name) (ClientEnv manager (BaseUrl Http "127.0.0.1" 8000 ""))
   case res of
-    Left err   -> putStrLn $ "Error: " ++ show err
-    Right usrs -> print usrs
+    Left err   -> "Error: " ++ show err
+    Right usrs -> usrs
