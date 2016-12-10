@@ -1,12 +1,12 @@
 {-# LANGUAGE DataKinds            #-}
+{-# LANGUAGE DeriveAnyClass       #-}
+{-# LANGUAGE DeriveGeneric        #-}
 {-# LANGUAGE ExtendedDefaultRules #-}
+{-# LANGUAGE FlexibleInstances    #-}
 {-# LANGUAGE OverloadedStrings    #-}
 {-# LANGUAGE StandaloneDeriving   #-}
 {-# LANGUAGE TemplateHaskell      #-}
 {-# LANGUAGE TypeOperators        #-}
-{-# LANGUAGE DeriveGeneric        #-}
-{-# LANGUAGE DeriveAnyClass       #-}
-{-# LANGUAGE FlexibleInstances    #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 
 
@@ -19,6 +19,7 @@ import           Data.Aeson
 import           Data.Aeson.TH
 import qualified Data.ByteString.Char8    as C
 import           Data.Char
+import           Data.Either.Unwrap
 import           Data.List                (sortBy)
 import           Data.Ord                 (comparing)
 import           Data.Proxy
@@ -64,7 +65,7 @@ server = login
 
 login :: Maybe String -> Handler Token
 login uname = liftIO $ do
-  u <- getUsers uname
+  print $ getUsers uname
   return $ Token 10
 
 --encryption code
@@ -118,10 +119,8 @@ dataAPI = Proxy
 
 (getUserByName :<|> saveFile) = client dataAPI
 
-getUsers :: Maybe String -> Either String [User]
+getUsers :: Maybe String -> [User]
 getUsers name = do
   manager <- newManager defaultManagerSettings
   res <- runClientM (getUserByName name) (ClientEnv manager (BaseUrl Http "127.0.0.1" 8000 ""))
-  case res of
-    Left err   -> "Error: " ++ show err
-    Right usrs -> usrs
+  fromRight res

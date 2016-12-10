@@ -23,6 +23,7 @@ library
                      , servant-client
                      , wai
                      , attoparsec
+                     , either-unwrap
                      , mtl
                      , http-client
                      , random
