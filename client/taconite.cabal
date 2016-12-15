@@ -18,10 +18,13 @@ library
   exposed-modules:     Lib
   build-depends:       base >= 4.7 && < 5
                      , aeson
+                     , servant
                      , servant-server
+                     , servant-client
                      , wai
                      , attoparsec
                      , mtl
+                     , http-client
                      , random
                      , binary
                      , bytestring
