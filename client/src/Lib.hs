@@ -54,3 +54,33 @@ startApp = forever $ do
     when (l == "login") $ do
             putStrLn ""
             putStrLn "Please Enter Username"
+
+
+--AuthApi
+
+data PublicKey = PublicKey { pubkey :: Int } deriving (Show, Generic, FromJSON, ToJSON)
+
+data Token = Token
+  { token :: Int
+  } deriving (Show, Generic, FromJSON, ToJSON)
+
+login :: Maybe String -> ClientM Token
+
+getPublicKey :: ClientM PublicKey
+
+type AuthAPI = "login" :> QueryParam "username" String :> Get '[JSON] Token
+      :<|> "getPublicKey" :> Get '[JSON] PublicKey
+
+authAPI :: Proxy AuthAPI
+authAPI = Proxy
+
+(login :<|> getPublicKey) = client authAPI
+
+--getKey :: Maybe String -> PublicKey
+getKey :: IO()
+getKey = do
+  manager <- newManager defaultManagerSettings
+  res <- runClientM getPublicKey (ClientEnv manager (BaseUrl Http "127.0.0.1" 8001 ""))
+  case res of
+    Left err     -> putStrLn $ "Error: " ++ show err
+    Right pubkey -> print pubkey
