@@ -119,16 +119,16 @@ dataAPI = Proxy
 
 (getUserByName :<|> saveFile) = client dataAPI
 
--- getUsers :: Maybe String -> [User]
--- getUsers name = do
---   manager <- newManager defaultManagerSettings
---   res <- runClientM (getUserByName name) (ClientEnv manager (BaseUrl Http "127.0.0.1" 8000 ""))
---   fromRight res
 
-getUsers :: Maybe String -> IO()
+getUsers :: Maybe String -> IO ( Either String [User] )
 getUsers name = do
   manager <- newManager defaultManagerSettings
   res <- runClientM (getUserByName name) (ClientEnv manager (BaseUrl Http "127.0.0.1" 8000 ""))
-  case res of
-    Left err   -> putStrLn $ "Error: " ++ show err
-    Right usrs -> print usrs
+  return $ case res of
+    Left err   -> Left ("Error: " ++ show err)
+    Right usrs -> Right usrs
+
+ --where
+ -- handle (Left e) = Left ("Error: " ++show e)
+ -- handle (Right (x:y:_)) = Right us
+ -- handle _ = Left "unknown error"
