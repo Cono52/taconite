@@ -65,7 +65,10 @@ server = login
 
 login :: Maybe String -> Handler Token
 login uname = liftIO $ do
-  getUsers uname
+  userOrError <- getUsers uname
+  case userOrError of
+    Left err   ->  print  ("Error: " ++ show err)
+    Right usrs ->  print usrs
   return $ Token 10
 
 --encryption code
